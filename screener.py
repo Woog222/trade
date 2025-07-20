@@ -20,7 +20,8 @@ class Screener:
         """
         c = self.app.client.exchange_info()
         symbols = [x.get("symbol") for x in c.get("symbols") if x.get("quoteAsset") == "USDT" and x.get("contractType") == "PERPETUAL"]
-        return [Coin(symbol) for symbol in symbols]
+        coins = [Coin(symbol) for symbol in symbols]
+        return [coin for coin in coins if coin.get_24h_volume() > 30000000] # over 30M USDT
 
     def get_sorted_coins(self, key):
         """
@@ -31,6 +32,7 @@ class Screener:
     
     
 if __name__ == "__main__":
+
     screener = Screener()
     coins_sorted_by_volume = screener.get_sorted_coins("volume")
     coins_sorted_by_price_change = screener.get_sorted_coins("price_change")
@@ -62,8 +64,13 @@ if __name__ == "__main__":
             
         
         # 3. Update favorites
-        f.write(f"Favorites added: {favorites_added}\n")
-        f.write(f"Favorites removed: {favorites_removed}\n")
+        f.write(f"--------Favorites added-------------\n")
+        for coin_symbol in favorites_added:
+            f.write(coin_symbol + "\n")
+        
+        f.write(f"--------Favorites removed-------------\n")
+        for coin_symbol in favorites_removed:
+            f.write(coin_symbol + "\n")
             
 
             

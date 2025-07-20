@@ -18,6 +18,16 @@ class Coin:
         self.sorted_price_list = self.get_sorted_price_list()
         self.price_change = (self.sorted_price_list[-1][1] - self.sorted_price_list[0][1]) / self.sorted_price_list[0][1] * 100  
 
+    def get_24h_volume(self):
+        """
+        Get the 24h volume of the coin
+        return (float): The 24h quotevolume of the coin
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/24hr-Ticker-Price-Change-Statistics
+        """
+        a = self.app.client.ticker_24hr_price_change(symbol=self.symbol)
+        if a.get("quoteVolume") is None:
+            print(self.symbol)
+        return float(a.get("quoteVolume", 0))
     
     def get_sorted_price_list(self):
         price_list = [(x[0], float(x[2])) for x in self.klines] + [(x[0], float(x[3])) for x in self.klines] # high, low prices within the window
