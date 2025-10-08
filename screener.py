@@ -68,7 +68,14 @@ class Screener:
         """
         c = self.app.client.exchange_info()
         symbols = [x.get("symbol") for x in c.get("symbols") if x.get("quoteAsset") == "USDT" and x.get("contractType") == "PERPETUAL"]
-        coins = [Coin(symbol) for symbol in symbols]
+        
+        coins = []
+        for symbol in symbols:
+            try:
+                coins.append(Coin(symbol))
+            except Exception as e:
+                print(e)
+                continue
         return [coin for coin in coins if coin.get_24h_volume() > config.SCREEN_MIN_VOLUME] # over 30M USDT
 
     def screen(self):
@@ -106,14 +113,14 @@ if __name__ == "__main__":
             CoinFilter(
                 limit=config.SCREEN_LIMIT, 
                 sort_key=lambda x: sum([float(candle[7]) for candle in x.klines]), # sum up the quote volume of the last 1h
-                filter_criteria_str="1h_Volume",
+                filter_criteria_str=f"{config.SCREEN_WINDOW}m_Volume",
                 reverse=True
             ),
             # Filter to find coins with drastic price change in the last hour
             CoinFilter(
                 limit=config.SCREEN_LIMIT, 
                 sort_key=get_price_change,
-                filter_criteria_str="1h_drastic_price_change",
+                filter_criteria_str=f"{config.SCREEN_WINDOW}m_drastic_price_change",
                 reverse=True
             ),
             # Filter to find coins with stagnant price change
@@ -122,7 +129,7 @@ if __name__ == "__main__":
                 sort_key=get_price_change,
                 # exclude coins with over 500M USDT 24h volume and price change less than 1%
                 exclude_key=lambda x: x.get_24h_volume() > 500000000 or get_price_change(x) < 0.01, 
-                filter_criteria_str="1h_stagnant_price_change (exclude over 500M USDT 24h volume and price change less than 1%)",
+                filter_criteria_str=F"{config.SCREEN_WINDOW}m_stagnant_price_change (exclude over 500M USDT 24h volume and price change less than 1%)",
                 reverse=False
             ),  
         ]
